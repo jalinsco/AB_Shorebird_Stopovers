@@ -9,7 +9,6 @@ library(tidyr)
 library(lubridate)
 library(terra)
 library(sf)
-library(ggplot2)
 library(mapview)
 library(EMbC)
 library(geosphere)
@@ -19,14 +18,11 @@ source('scripts/05 functions.R')
 
 # Load movement tracks  ----------------------------------------------------------
 
-# Choose species
-species_name <- "hugo"
-
 # Load file
+# note: includes id (individual identifier) & a yearly_id (unique identifier for each southward track)
 filepath <- ('data/HUGO processed tracks.csv') 
 sp_df <- read.csv(filepath)
 
-# note: file includes a yearly_id (unique identifier for each southward track)
 
 
 # Identify stationary locations  -----------------------------------------------
@@ -51,7 +47,9 @@ for (i in seq_along(1:n_indivs)) {
   indivs_list[[i]] = as.data.frame(path_stk[[i]])
 }
 
-mystk <- stbc(indivs_list) # using default speed threshold of 40 ms-1 
+# Clustering
+# note: uses default speed threshold of 40 ms-1
+mystk <- stbc(indivs_list)   
 
 
 # Inspect overall results
@@ -143,7 +141,7 @@ all_sf <- st_as_sf(all_stops,
                    coords = c("location.long", "location.lat"), crs = 4326)
 
 # Load AOI
-ab <- st_read('data/Amazon Basin Shapefiles/SNAPP_AB.shp') %>%
+ab <- st_read('data/SNAPP_AB.shp') %>%
   st_set_crs(4326) %>%
   st_make_valid()
 
@@ -276,21 +274,21 @@ all_stops <- all_stops %>%
 
 # FILTER: location quality ------------------------------------------------------
 
-# Create tables to inspect location classes
+# Create stopvoer event table
 stops_table <- all_stops %>% 
   group_by(stop_id) %>%
   count(lc) %>%
   pivot_wider(names_from = lc, values_from = n) %>%
-  relocate('1', .after = '2') %>%
-  print(n = n_stops)
+  relocate('1', .after = '2') 
 
+# Create location class (LC) table
 locs_table <- all_stops %>%
   group_by(stop_id) %>%
   slice(1) %>%
   left_join(stops_table) %>%
   dplyr::select(species, id, stop_id, start, end, duration, G, '3', '2', '1', A, B, '0')
 
-
+# List stops that have only low-LC locations
 low_qual_vec <- locs_table %>%
   rename('LC_G' = 'G',
          'LC_3' = '3',
@@ -304,7 +302,8 @@ low_qual_vec <- locs_table %>%
   unlist(use.names = FALSE)
 
 # Filter stops that only have poor-quality locations
-all_stops <- all_stops %>% filter(!(stop_id %in% low_qual_vec))
+all_stops <- all_stops %>% 
+  filter(!(stop_id %in% low_qual_vec))
 
 
 # FILTER: transmitter failures & overwintering ---------------------------------
@@ -314,11 +313,34 @@ all_stops <- all_stops %>% filter(!(stop_id %in% low_qual_vec))
 
 # via manual inspection; no instances in HUGO
 
+
 # Save results -----------------------------------------------------------------
 
-#write.csv(all_stops, 'data/HUGO stopover locations.csv', row.names=FALSE)
+# saved as 'data/HUGO stopover locations.csv'
 
 
+# Create stopover centroids ----------------------------------------------------
+
+centroids <- all_stops %>%
+  st_as_sf(all_stops, 
+           coords = c('lon', 'lat'), 
+           crs = 4326)
+  group_by(stop_id) %>% 
+  # exclude low-LC locations from centroid creation
+  filter(!(lc %in% c('A', 'B', '0'))) %>%
+  summarize(geometry = st_union(geometry)) %>%
+  st_centroid() %>%
+  mutate(lon = unlist(map(geometry,1)),
+         lat = unlist(map(geometry,2))) %>%
+  st_drop_geometry() 
+
+# Join stopover information
+stop_info <- all_stops %>% 
+    dplyr::select(id, species, stop_id, start, end, duration) %>% 
+    distinct()  
+centroids <- left_join(stop_info, centroids) 
+
+# saved as 'data/HUGO stopover centroids.csv'
 
 
 

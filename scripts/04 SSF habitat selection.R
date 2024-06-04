@@ -14,14 +14,17 @@ library(mapview)
 
 # Load STEP data ---------------------------------------------------------------
 
-all_steps <- read.csv('data/HUGO_SSF_steps.csv') 
+# data frame includes:
+# (1) 'used' steps (transmitter-reported locations) -- (used = 1, sim = 0)
+# (2) 'available' steps (randomly generated locations) -- (used = 0, sim = 0)
+# (3) 'alternative' steps (simulated by ctmm) -- (used = NA, sim = 1)
 
-all_steps <- all_steps %>%
+all_steps <- read.csv('data/HUGO SSF steps.csv') %>%
   mutate(timestamp = parse_date_time(timestamp, orders = "ymd HMS", truncated = 3),
          year = year(timestamp),
          yearly_id = paste0(id, year))
 
-# no MB data currently available for 2022 -- so change the year to 2021
+# no MB data currently available for 2022 -- change the year to 2021
 all_steps <- all_steps %>% 
   mutate(year = ifelse(year == 2022, 2021, year))
 
@@ -31,18 +34,19 @@ all_steps[which(is.na(all_steps$timestamp)),]
 # Load GEE data -----------------------------------------------------------------
 
 # JRC: load & tidy
-jrc <- read.csv('D:/SA Stopovers Chapter/Data Overflow/SSF/SSF_JRC.csv') %>% 
-  dplyr::select(loc_id, occurrence, recurrence, seasonality, contains('_Obsv'), contains('_Rec'))
+jrc <- read.csv('data/SSF_JRC.csv') %>% 
+  dplyr::select(loc_id, occurrence, recurrence, seasonality, 
+                contains('_Obsv'), contains('_Rec'))
 jrc_env <- left_join(all_steps, jrc, by = 'loc_id')
 
 # MAPBIOMAS: load & tidy
-mb <- read.csv('D:/SA Stopovers Chapter/Data Overflow/SSF/SSF_MB_Combined.csv') %>% 
+mb <- read.csv('data/SSF_MB_Combined.csv') %>% 
   dplyr::select(loc_id, forest:year)
 mb_env <- left_join(all_steps, mb, by = c('loc_id', 'year'))
 
 
 # DEM: load & tidy
-dem <- read.csv('D:/SA Stopovers Chapter/Data Overflow/SSF/SSF_DEM.csv') %>% 
+dem <- read.csv('data/SSF_DEM.csv') %>% 
   dplyr::select(loc_id, elevation, slope)
 dem_env <- left_join(all_steps, dem, by = 'loc_id')
 
@@ -69,7 +73,7 @@ used <- ssf_env %>%
 av <- ssf_env %>% 
   filter(used == 0) %>% 
   group_by(pair) %>% 
-  slice_sample(n = 5) # vary slice to get diff number of locs
+  slice_sample(n = 5) 
 reduced_ssf <- bind_rows(used, av)
 
 
@@ -108,7 +112,8 @@ totals <- lc_tbl %>%
   dplyr::summarize(total = sum(count)) %>%
   ungroup()
 
-lc_tbl <- left_join(lc_tbl, totals) %>% mutate(pct = count/total) 
+lc_tbl <- left_join(lc_tbl, totals) %>% 
+  mutate(pct = count/total) 
 
 lc_list <- unique(lc_tbl$LC)
 
