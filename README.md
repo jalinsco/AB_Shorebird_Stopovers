@@ -1,9 +1,3 @@
-# Shorebirds
+# Shorebirds in the Amazon Basin
 
-This repository contains sample code and data for shorebird stopover analysis in the Amazon Basin, as presented in Linscott et al. 202X. Code includes identification of stopover events, as well as construction of a resource selection function and step selection function for the resulting locations. For more information, see, https://doi.org/XXXX.
-
-## Requirements
-To reproduce the following case studies, you need to install several R packages. You can find the packages' installation code in R/package-installation.R.
-
-## Data
-For sample data, we provide locations of Hudsonian godwits (Limosa haemastica) in the Amazon Basin, as recorded by satellite tracking devices. Raw data is available under Movebank repostiory https://doi.org/XXXX. 
+This repository contains sample code and data for our manuscript, "The Amazon Basin's Rivers and Lakes Support Nearctic-breeding Shorebirds During Southward Migration", published in Ornithological Applications. Included is a demonstration of stopover site identification, resource selection functions, and step selection functions, using location data from Hudsonian Godwits (Limosa haemastica). how we identified stopover events and how we constructed resource and step selection functions. For more information, see, https://doi.org/XXXX.
