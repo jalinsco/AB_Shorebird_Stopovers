@@ -12,6 +12,7 @@ This repository contains sample code and data for our manuscript, "The Amazon Ba
   R scripts used for data processing.
   
 ## Data
+---
 ├── HUGO movement/
 │   ├── HUGO preprocessed tracks.csv
 │   ├── HUGO stopover locations.csv
@@ -31,7 +32,6 @@ This repository contains sample code and data for our manuscript, "The Amazon Ba
 │   ├── RSF_JRC_AV.csv
 │   ├── RSF_JRC_USED.csv
 │   ├── RSF_MB_AV.csv
-│   ├── RSF_DEM_5km_USED.csv
 │   └── RSF_MB_USED.csv
 ├── SSF/
 │    ├── SSF_DEM.csv
@@ -40,18 +40,19 @@ This repository contains sample code and data for our manuscript, "The Amazon Ba
 │    └── SSF_all_steps.cs
 └── Amazon Basin/
     └── SNAPP_AB.shp
+---
 
 ## Scripts
-- '01 identify stopovers.R'
-  How to identify stopovers in movement tracks, using Hudsonian Godwit (HUGO) tracks as an example.
-- '02 RSF habitat selection.R'
-  Example of a Resource Selection Function (RSF) analysis.
-- '03 simulate alternative steps for SSF.R'
-  Demonstration of how to generate plausible alternative steps for a Step Selection Function (SSF) analysis. 
-- '04 SSF habitat selection.R'
-  Example of a Resource Selection Function (RSF) analysis.
-- '05 functions.R'
-  Necessary functions for other scripts.
+- '01 identify stopovers.R'  
+  How to identify stopovers in movement tracks, using Hudsonian Godwit (HUGO) tracks as an example.  
+- '02 RSF habitat selection.R'  
+  Example of a Resource Selection Function (RSF) analysis.  
+- '03 simulate alternative steps for SSF.R'  
+  Demonstration of how to generate plausible alternative steps for a Step Selection Function (SSF) analysis.   
+- '04 SSF habitat selection.R'  
+  Example of a Resource Selection Function (RSF) analysis.  
+- '05 functions.R'  
+  Necessary functions for other scripts.  
 
 ## Data sources
 Data for the Resource Selection Function (RSF) and Step Selection Function (SSF) analyses are derived from the Joint Research Commission Global Surface Water occurrence layer (see Pekel et al. 2016), the annual land use and land cover (‘LULC’) data at available sites, from MapBiomas Amazonía (Colección 4.0, https://amazonia.mapbiomas.org/), and NASA's Shuttle Radar Topography Mission. All data layers were obtained from Google Earth Engine. The shapefile depicting the subbasin of the Amazon Basin (SNAPP_AB.shp) is derived from the Amazon Waters Initiative (see Venticinque et al. 2016). Hudsonian Godwit movement data is stored on Movebank. 
