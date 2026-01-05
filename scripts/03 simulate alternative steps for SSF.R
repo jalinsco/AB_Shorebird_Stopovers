@@ -2,19 +2,36 @@
 #------ SIMULATE TRACKS for SSF -------------X
 #############################################X
 
-library(dplyr)
-library(tidyr)
-library(lubridate)
-library(terra)
-library(sf)
-library(ggplot2)
-library(mapview)
-library(mvtnorm)
-library(ctmm)
-library(units)
 
 
-# Load data --------------------------------------------------------------------
+# Load packages ----------------------
+
+# required R packages
+required_pkgs <- c("dplyr", 
+                   "tidyr",
+                   "lubridate",
+                   "terra",
+                   "sf",
+                   "ggplot2",
+                   "mapview",
+                   "mvtnorm",
+                   "ctmm",
+                   "units")
+
+# load 
+missing <- required_pkgs[!vapply(required_pkgs, 
+                                 requireNamespace, 
+                                 logical(1), 
+                                 quietly = TRUE)]
+
+# check if missing
+if (length(missing) > 0) {
+  stop("Missing packages: ", paste(missing, collapse = ", "))
+}
+
+
+
+# Load data ----------------------
 
 # Load stopovers list
 
@@ -26,7 +43,7 @@ stop_locs <- read.csv("data/HUGO stopover locations.csv") %>%
          timestamp = ymd_hms(timestamp))
 
 
-# Prepare data frame ------------------------------------------------------------
+# Prepare data frame ----------------------
 
 # Exclude individuals/data with missing argos error ellipse info
 stop_locs <- stop_locs %>% 
@@ -38,7 +55,7 @@ indivs_list <- stop_locs %>%
   pull()
 
 
-# Simulate alternative steps ---------------------------------------------------
+# Simulate alternative steps ----------------------
 
 # used to evaluate the robustness of conclusions to location error 
 # Workflow amended from Karagacheva et al. 2023

@@ -1,31 +1,50 @@
 #############################################X
 #-------- Identify Stopover Events ----------X
 #############################################X
-#-------- from movement tracks --------------X
+#----- in shorebird movement tracks ---------X
 #############################################X
 
-library(dplyr)
-library(tidyr)
-library(lubridate)
-library(terra)
-library(sf)
-library(mapview)
-library(EMbC)
-library(geosphere)
-library(purrr)
+
+# Load packages ----------------------
+
+# required R packages
+required_pkgs <- c("dplyr", 
+                   "tidyr",
+                   "lubridate",
+                   "terra",
+                   "sf",
+                   "mapview",
+                   "geosphere",
+                   "EMbC",
+                   "purrr")
+
+# load 
+missing <- required_pkgs[!vapply(required_pkgs, 
+                                 requireNamespace, 
+                                 logical(1), 
+                                 quietly = TRUE)]
+
+# check if missing
+if (length(missing) > 0) {
+  stop("Missing packages: ", paste(missing, collapse = ", "))
+}
+
+
+  # load functions
 source('scripts/05 functions.R')
 
 
-# Load movement tracks  ----------------------------------------------------------
 
-# Load file
-# note: includes id (individual identifier) & a yearly_id (unique identifier for each southward track)
-filepath <- ('data/HUGO processed tracks.csv') 
-sp_df <- read.csv(filepath)
+# Load movement tracks  ----------------------
+
+# tabular file includes:
+# id = indiviudal identifier
+# yearly_id = unique identifier for each soutward track
+sp_df <- read.csv(('data/HUGO processed tracks.csv') )
 
 
 
-# Identify stationary locations  -----------------------------------------------
+# Identify stationary locations  ----------------------
 
 # Format timestamps
 sp_df$timestamp <- ymd_hms(sp_df$timestamp)
@@ -48,7 +67,7 @@ for (i in seq_along(1:n_indivs)) {
 }
 
 # Clustering
-# note: uses default speed threshold of 40 ms-1
+# (uses default speed threshold of 40 ms-1)
 mystk <- stbc(indivs_list)   
 
 
@@ -92,7 +111,7 @@ for (i in seq_along(1:n_indivs)){
 #rm(indiv4_sf)
 
 
-# Produce a final combined data frame
+# Final combined data frame
 all_df <- indiv1_df
 for (i in seq(from = 2, to = n_indivs)){
   h <- get(paste0("indiv", i, "_df"))
@@ -108,7 +127,7 @@ all_clust <- all_df %>%
 
 
 
-# Group into stopovers----------------------------------------------------------
+# Group into stopovers ----------------------
 
 all_stops <- all_clust %>%
   # select only low-speed locations 
@@ -134,7 +153,7 @@ all_stops <- all_clust %>%
   arrange(yearly_id)
 
 
-# FILTER: by location ----------------------------------------------------------
+# FILTER: by location ----------------------
 
 # Convert to sf
 all_sf <- st_as_sf(all_stops, 
@@ -149,7 +168,7 @@ ab <- st_read('data/SNAPP_AB.shp') %>%
 all_stopsAB <- st_filter(all_sf, ab)
 
 
-# Merge Spatially Overlapping Groups  ------------------------------------------
+# Merge Spatially Overlapping Groups  ----------------------
 
 # Merge
 all_stopsAB_merged <- merge_overlaps(all_stopsAB)
@@ -160,7 +179,7 @@ all_stopsAB_merged <- merge_overlaps(all_stopsAB)
 #mapview(all_stopsAB_merged, zcol = "stop")
 
 
-# FILTER: by duration ----------------------------------------------------------
+# FILTER: by duration ----------------------
 
 # Calculate duration
 all_stops <- all_stopsAB_merged %>% 
@@ -181,7 +200,7 @@ all_stops <- all_stops %>%
   filter(!(month(start) < 6)) 
 
 
-# ADD BACK: last locations -----------------------------------------------------
+# ADD BACK: last locations ----------------------
 
 # the last location in a stopover is sometimes marked non-stationary & not included
 # inspect to determine if these should be re-grouped with the stopover 
@@ -229,7 +248,8 @@ for (i in 1:nrow(last_locs_sf)) {
 }
 
 
-# Inspect -- disregard if null
+# Inspect 
+# (disregard if null)
 add_back_df <- add_back %>%
   mutate(location.long = unlist(map(geometry,1)),
          location.lat = unlist(map(geometry,2))) %>%
@@ -260,7 +280,7 @@ all_stops <- all_stops %>%
                 gps.fix.type.raw, clust_id, dist_from, jump, stop, n_locs, start, end, duration)
   
 
-# Label stops -----------------------------------------------------------------
+# Label stops ----------------------
 
 # Apply unique & sequential stopover id
 all_stops <- all_stops %>%
@@ -272,7 +292,7 @@ all_stops <- all_stops %>%
   arrange(species, stop_id)
 
 
-# FILTER: location quality ------------------------------------------------------
+# FILTER: location quality -----------------------
 
 # Create stopvoer event table
 stops_table <- all_stops %>% 
@@ -301,12 +321,12 @@ low_qual_vec <- locs_table %>%
   dplyr::select(stop_id) %>%
   unlist(use.names = FALSE)
 
-# Filter stops that only have poor-quality locations
+# filter stops that only have poor-quality locations
 all_stops <- all_stops %>% 
   filter(!(stop_id %in% low_qual_vec))
 
 
-# FILTER: transmitter failures & overwintering ---------------------------------
+# FILTER: transmitter failures & overwintering -----------------------
 
 # identify & remove via manual inspection 
 # no instances in HUGO
@@ -319,8 +339,9 @@ all_stops <- all_stops %>%
 # saved as 'data/HUGO stopover locations.csv'
 
 
-# Create stopover centroids ----------------------------------------------------
+# Stopover centroids ----------------------------------------------------
 
+# create centroids
 centroids <- all_stops %>%
   st_as_sf(all_stops, 
            coords = c('lon', 'lat'), 
@@ -334,7 +355,7 @@ centroids <- all_stops %>%
          lat = unlist(map(geometry,2))) %>%
   st_drop_geometry() 
 
-# Join stopover information
+# join stopover information
 stop_info <- all_stops %>% 
     dplyr::select(id, species, stop_id, start, end, duration) %>% 
     distinct()  

@@ -1,24 +1,43 @@
 #############################################X
 #-- Large-Scale (Lev II) Habitat Selection --X
 #############################################X
-#------------ Prepare  & Model --------------X
+#------------ Prepare & Model ---------------X
 #############################################X
 
-library(sf)
-library(mapview)
-library(ggplot2)
-library(pROC)
-library(geojsonsf)
-library(MuMIn)
-library(lubridate)
-library(spdep)
-library(broom.mixed)
-library(lmtest)
-library(sandwich)
+
+
+# Load packages ----------------------
+
+# required R packages
+required_pkgs <- c("sf", 
+                   "mapview",
+                   "ggplot2",
+                   "pROC",
+                   "geojsonsf",
+                   "MuMIn",
+                   "lubridate",
+                   "spdep",
+                   "broom.mixed",
+                   "lmtest",
+                   "sandwich")
+
+# load 
+missing <- required_pkgs[!vapply(required_pkgs, 
+                                 requireNamespace, 
+                                 logical(1), 
+                                 quietly = TRUE)]
+
+# check if missing
+if (length(missing) > 0) {
+  stop("Missing packages: ", paste(missing, collapse = ", "))
+}
+
+
+# load functions
 source('scripts/05 functions.R')
 
 
-# Load Geographic Data  --------------------------------------------------------
+# Load Geographic Data  ----------------------
 
 # SNAPP Amazon Basin shapefiles (Venticinque et al. 2016)
 # see: https://snappartnership.net/teams/amazon-waters/
@@ -28,7 +47,7 @@ basins <- st_read('data/SNAPP_Subbasins.shp')
 # Load stopover centroids 
 centroids <- read.csv('data/HUGO stopover centroids.csv')
 
-# Create 'Available' Locations for Comparison ----------------------------------
+# Create 'Available' Locations for Comparison ----------------------
 
 # Set projection
 proj <- 'PROJCS["Custom_Cylindrical_Equal_Area",
@@ -85,7 +104,7 @@ random_final <- left_join(random_df, get_basins) %>%
 head(random_final)
 
 
-# Identify visited subbasins ---------------------------------------------------
+# Identify visited subbasins ----------------------
 
 # Load tracking data
 sp_df <- read.csv('data/HUGO processed tracks.csv') %>% 
@@ -106,7 +125,7 @@ sp_basins <- st_join(sp_sf_polylines, basins, join = st_intersects) %>%
     na.omit()
 
 
-# Extract geographic data -----------------------------------------------------
+# Extract geographic data ----------------------
 # done in GEE
 
 # Habitat data: Mapbiomas (downloaded from GEE; RAISG 2023)
@@ -125,7 +144,7 @@ dem_used <- read.csv('data/RSF_DEM_5km_USED.csv')
 dem_av <- read.csv('data/RSF_DEM_5km_AV.csv') 
 
 
-# Prepare data frame -----------------------------------------------------------
+# Prepare data frame ----------------------
 
 # Vector of sacles
 scales = c(2, 3, 4, 5, 10, 15, 20)
@@ -207,7 +226,7 @@ for(i in 1:length(scales)){
 
 
 
-# Identify characteristic Scale ------------------------------------------------
+# Identify characteristic Scale ----------------------
 
 # Scale-varying variables 
 sv_vars <- c('forcat_prop', 'forest_prop', 'savanna_prop', 
@@ -273,7 +292,7 @@ df
 
 
 
-# Create final data frame ------------------------------------------------------
+# Create final data frame ----------------------
 
 # Select variables at their characteristic scales
 rsf_df <- habitat_df_2km
@@ -286,7 +305,7 @@ rsf_df <- rsf_df %>%
 # Saved as 'data/HUGO_RSF_habitat_df.csv'
 
 
-# Logistic RSF ----------------------------------------------------------------- 
+# Logistic RSF ----------------------
 
 # Load manuscript results
 rsf_df <- read.csv('data/HUGO_RSF_habitat_df.csv')

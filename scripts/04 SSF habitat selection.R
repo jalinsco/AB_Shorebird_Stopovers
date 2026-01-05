@@ -5,14 +5,30 @@
 #############################################X
 
 
-library(tidyverse)
-library(sf)
-library(purrr)
-library(mapview)
+
+# Load packages ----------------------
+
+# required R packages
+required_pkgs <- c("tidyverse", 
+                   "sf",
+                   "purrr",
+                   "mapview")
+
+# load 
+missing <- required_pkgs[!vapply(required_pkgs, 
+                                 requireNamespace, 
+                                 logical(1), 
+                                 quietly = TRUE)]
+
+# check if missing
+if (length(missing) > 0) {
+  stop("Missing packages: ", paste(missing, collapse = ", "))
+}
 
 
 
-# Load STEP data ---------------------------------------------------------------
+
+# Load STEP data ----------------------
 
 # data frame includes:
 # (1) 'used' steps (transmitter-reported locations) -- (used = 1, sim = 0)
@@ -31,7 +47,7 @@ all_steps <- all_steps %>%
 # check
 all_steps[which(is.na(all_steps$timestamp)),] 
 
-# Load GEE data -----------------------------------------------------------------
+# Load GEE data ----------------------
 
 # JRC: load & tidy
 jrc <- read.csv('data/SSF_JRC.csv') %>% 
@@ -65,7 +81,7 @@ nrow(all_steps) == nrow(ssf_env) # check for missing data
 unique(ssf_env$stop_id) # check for stop edits
 
 
-# Select Ratio -----------------------
+# Select Ratio ----------------------
 
 # to 1:5
 used <- ssf_env %>% 
@@ -77,7 +93,7 @@ av <- ssf_env %>%
 reduced_ssf <- bind_rows(used, av)
 
 
-# Create data frame for modeling ------------------------------------------------
+# Create data frame for modeling ----------------------
 
 mod_ssf <- reduced_ssf %>% 
   #dplyr::select(-(recurrence:Sept_Rec)) %>%
@@ -90,7 +106,7 @@ mod_ssf <- reduced_ssf %>%
 
 
 
-# Create Used:Available Tables -------------------------------------------------
+# Create Used:Available Tables ----------------------
 
 lc_tbl <- reduced_ssf %>%
   pivot_longer(cols = forest:not_Obs, names_to='LC', values_to = 'LC_use') %>%
@@ -147,7 +163,7 @@ if(length(never_used) > 0){
 # Inspect
 #lc_tbl %>% print(n = 50)
 
-# Logistic SSF  -----------------------------------------------------------------
+# Logistic SSF  ----------------------
 
 # Check plot (see script 15)
 hugo_lc_plot
